@@ -36,12 +36,22 @@
           success: function (response) {
             // remove loading spinner
             $(spinner).removeClass("loader-spinner");
-            console.log(response);
+
+            if (response.success) {
+              console.log("Success:", response.data);
+              alert("Post shared successfully!");
+              $("#gli-share-linkedin-popup").fadeOut();
+            } else {
+              console.error("Error:", response.data);
+              alert("Failed to share the post.");
+              $("#gli-share-linkedin-popup").fadeOut();
+            }
           },
           error: function (xhr, status, error) {
-            // remove loading spinner
             $(spinner).removeClass("loader-spinner");
-            console.log(error);
+            console.error("Error:", xhr.responseText || error);
+            alert("An error occurred during the request.");
+            $("#gli-share-linkedin-popup").fadeOut();
           },
         });
       });

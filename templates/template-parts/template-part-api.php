@@ -1,11 +1,11 @@
 <?php 
 
-$api_url  = get_option( 'api_url' );
+$api_url  = get_option( 'api_url', 'https://api.linkedin.com/v2/ugcPosts'  );
 $api_key  = get_option( 'api_key' );
 
 ?>
 
-<h4 class="common-title">API Credentials</h4>
+<h4 class="common-title">Linkedin API Credentials</h4>
 
 <div class="credentials-wrapper overflow-hidden">
     <div class="common-input-group">
@@ -14,8 +14,8 @@ $api_key  = get_option( 'api_key' );
             value="<?= $api_url ?>" required>
     </div>
     <div class="common-input-group mt-20">
-        <label for="api_key">API Key</label>
-        <input type="text" class="common-form-input" name="api_key" id="api_key" placeholder="API Key"
+        <label for="api_key">Access Token</label>
+        <input type="text" class="common-form-input" name="api_key" id="api_key" placeholder="Access Token"
             value="<?= $api_key ?>" required>
     </div>
 
