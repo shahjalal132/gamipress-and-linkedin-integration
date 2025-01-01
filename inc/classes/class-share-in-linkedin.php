@@ -10,11 +10,21 @@ class Share_In_Linkedin {
     use Singleton;
     use Program_Logs;
 
+    private $client_id;
+    private $client_secret;
+    private $callback_url;
+
     public function __construct() {
         $this->setup_hooks();
     }
 
     public function setup_hooks() {
+
+        // get api credentials
+        $this->client_id     = get_option( 'linkedin_client_id', '86jkj8psufudby' );
+        $this->client_secret = get_option( 'linkedin_client_secret', 'WPL_AP1.LtZcMQvYpaNWBm9K.qZgNRw==' );
+        $this->callback_url  = get_option( 'linkedin_callback_url', 'https://imjol.com' );
+
         add_filter( 'the_content', [ $this, 'add_social_share_buttons' ] );
 
         // handle ajax request
@@ -39,6 +49,11 @@ class Share_In_Linkedin {
                     <span>Share</span>
                     <span class='spinner-loader-wrapper'></span>
                     </button>
+                </div>
+
+                <div id='gli-sign-in-with-linkedin' style='display:none;'>
+                    <a href='https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=$this->client_id&redirect_uri=$this->callback_url&scope=openid%20profile%20w_member_social' class='btn btn-linkedin'>Login with LinkedIn</a>
+                    <button type='button' id='gli-sign-in-with-linkedin-popup-close' class='btn btn-linkedin'>Close</button>
                 </div>
 
             </div>";
@@ -156,7 +171,7 @@ class Share_In_Linkedin {
 
         $base_url             = site_url() . '/wp-json';
         $url                  = "$base_url/wp/v2/gamipress/award-points";
-        $gamipress_auth_token = "U3VqYW46a2g1NCBPNENKIDQ1dkwgblVJYSBjQ2h0IDZ6QUI=";
+        $gamipress_auth_token = get_option( 'auth_token' );
         $user_id              = get_current_user_id();
         $point                = 10;
 

@@ -8,8 +8,15 @@
       let post_url = $(this).data("post-url");
       let post_title = $(this).data("post-title");
 
-      // open popup
-      $("#gli-share-linkedin-popup").fadeIn();
+      let is_logged_in = false;
+
+      if (!is_logged_in) {
+        // open sign in popup
+        $("#gli-sign-in-with-linkedin").fadeIn();
+      } else {
+        // open share popup
+        $("#gli-share-linkedin-popup").fadeIn();
+      }
 
       // send ajax to backend when click on share button
       $("#gli-share-linkedin-popup-share").click(function (e) {
@@ -62,6 +69,13 @@
       e.preventDefault();
       $("#gli-share-linkedin-popup").fadeOut();
     });
+
+    // close popup when click close button
+    $("#gli-sign-in-with-linkedin-popup-close").click(function (e) {
+      e.preventDefault();
+      $("#gli-sign-in-with-linkedin").fadeOut();
+    });
+
     // Share on LinkedIn process end
   });
 })(jQuery);

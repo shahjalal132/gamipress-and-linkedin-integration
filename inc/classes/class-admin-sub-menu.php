@@ -25,8 +25,12 @@ class Admin_Sub_Menu {
 
     public function save_api_credentials() {
 
-        $api_url = sanitize_text_field( $_POST['api_url'] );
-        $api_key = sanitize_text_field( $_POST['api_key'] );
+        $api_url       = sanitize_text_field( $_POST['api_url'] );
+        $api_key       = sanitize_text_field( $_POST['api_key'] );
+        $auth_token    = sanitize_text_field( $_POST['auth_token'] );
+        $client_id     = sanitize_text_field( $_POST['client_id'] );
+        $client_secret = sanitize_text_field( $_POST['client_secret'] );
+        $redirect_url  = sanitize_text_field( $_POST['redirect_url'] );
 
         if ( empty( $api_url ) || empty( $api_key ) ) {
             wp_send_json_error( 'An error occurred! Please fill all the fields.' );
@@ -34,6 +38,10 @@ class Admin_Sub_Menu {
 
         update_option( 'api_url', $api_url );
         update_option( 'api_key', $api_key );
+        update_option( 'auth_token', $auth_token );
+        update_option( 'linkedin_client_id', $client_id );
+        update_option( 'linkedin_client_secret', $client_secret );
+        update_option( 'linkedin_callback_url', $redirect_url );
 
         wp_send_json_success( 'Credentials saved successfully!' );
         die();

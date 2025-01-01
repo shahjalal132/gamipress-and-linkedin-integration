@@ -78,6 +78,10 @@
     $("#save_credentials").on("click", function () {
       const api_url = $("#api_url").val();
       const api_key = $("#api_key").val();
+      const auth_token = $("#auth_token").val();
+      const client_id = $("#client_id").val();
+      const client_secret = $("#client_secret").val();
+      const redirect_url = $("#redirect_url").val();
 
       // add loading spinner
       const loader_button = $(".spinner-loader-wrapper");
@@ -90,6 +94,10 @@
           action: "save_credentials",
           api_url: api_url,
           api_key: api_key,
+          auth_token: auth_token,
+          client_id: client_id,
+          client_secret: client_secret,
+          redirect_url: redirect_url,
         },
         success: function (response) {
           // remove loading spinner

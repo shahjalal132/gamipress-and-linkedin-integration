@@ -108,3 +108,21 @@
   margin-right: 10px;
   background-color: var(--red-color);
 }
+
+#gli-sign-in-with-linkedin {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  width: 10%;
+  transform: translate(-50%, -50%);
+  border: 1px solid var(--linkedin-color);
+  padding: 20px;
+  border-radius: 10px;
+  background-color: var(--white-color);
+  z-index: 9999;
+}
+
+button#gli-sign-in-with-linkedin-popup-close {
+  margin-top: 15px;
+  background-color: var(--red-color);
+}
