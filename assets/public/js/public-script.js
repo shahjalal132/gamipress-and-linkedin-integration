@@ -16,12 +16,15 @@
           nonce: wpb_public_localize.nonce,
         },
         success: function (response) {
-          // console.log("check user logged in: ", response);
+          console.log("check user logged in: ", response);
 
-          if (!response.is_logged_in) {
+          if (
+            response.is_logged_in === "no" ||
+            response.is_logged_in === ""
+          ) {
             // open sign in popup
             $("#gli-sign-in-with-linkedin").fadeIn();
-          } else {
+          } else if (response.is_logged_in === "yes") {
             // open share popup
             $("#gli-share-linkedin-popup").fadeIn();
           }
@@ -88,18 +91,18 @@
 
     // Share on LinkedIn process end
 
-    $("#gli-sign-in-with-linkedin-button").click(function (e) {
-      e.preventDefault();
-      $.ajax({
-        type: "POST",
-        url: wpb_public_localize.ajax_url,
-        data: {
-          action: "sign_in_with_linkedin",
-        },
-        success: function (response) {
-          console.log(response);
-        },
-      });
-    });
+    // $("#gli-sign-in-with-linkedin-button").click(function (e) {
+    //   e.preventDefault();
+    //   $.ajax({
+    //     type: "POST",
+    //     url: wpb_public_localize.ajax_url,
+    //     data: {
+    //       action: "sign_in_with_linkedin",
+    //     },
+    //     success: function (response) {
+    //       console.log(response);
+    //     },
+    //   });
+    // });
   });
 })(jQuery);

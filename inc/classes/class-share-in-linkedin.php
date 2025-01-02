@@ -21,9 +21,9 @@ class Share_In_Linkedin {
     public function setup_hooks() {
 
         // get api credentials
-        $this->client_id     = get_option( 'linkedin_client_id', '86jkj8psufudby' );
-        $this->client_secret = get_option( 'linkedin_client_secret', 'WPL_AP1.LtZcMQvYpaNWBm9K.qZgNRw==' );
-        $this->callback_url  = get_option( 'linkedin_callback_url', 'https://imjol.com' );
+        $this->client_id     = get_option( 'linkedin_client_id', '' );
+        $this->client_secret = get_option( 'linkedin_client_secret', '' );
+        $this->callback_url  = get_option( 'linkedin_callback_url', '' );
 
         add_filter( 'the_content', [ $this, 'add_social_share_buttons' ] );
 
@@ -35,17 +35,155 @@ class Share_In_Linkedin {
         add_action( 'wp_ajax_check_user_logged_in', [ $this, 'check_user_logged_in' ] );
         add_action( 'wp_ajax_nopriv_check_user_logged_in', [ $this, 'check_user_logged_in' ] );
 
-        // handle ajax request
-        add_action( 'wp_ajax_sign_in_with_linkedin', [ $this, 'sign_in_with_linkedin' ] );
-        add_action( 'wp_ajax_nopriv_sign_in_with_linkedin', [ $this, 'sign_in_with_linkedin' ] );
+        // get ?code for login with linkedin
+        add_action( 'wp_loaded', [ $this, 'get_linkedin_auth_code' ] );
+
+        // TODO: update is_linkedin_logged_in to no after 60 days
+
+    }
+
+    public function get_linkedin_auth_code() {
+
+        // get current user id
+        $current_user_id = get_current_user_id();
+
+        // Check if this is the specific callback URL and has the 'code' query param
+        if ( isset( $_GET['code'] ) && strpos( $_SERVER['REQUEST_URI'], '/linkedin-callback' ) !== false ) {
+
+            // Store the auth code
+            $auth_code = sanitize_text_field( $_GET['code'] );
+
+            if ( !empty( $auth_code ) ) {
+
+                // Update user meta
+                update_user_meta( $current_user_id, 'linkedin_auth_code', $auth_code );
+
+                // Get access token for this user
+                $this->get_linkedin_access_token( $auth_code );
+            }
+        } else {
+            // $this->put_program_logs( 'No auth code found' );
+        }
+    }
+
+    public function get_linkedin_access_token( string $auth_code ) {
+
+        // get current user id
+        $current_user_id = get_current_user_id();
+
+        // access token url
+        $url = "https://www.linkedin.com/oauth/v2/accessToken";
+
+        $params = [
+            'grant_type'    => 'authorization_code',
+            'code'          => $auth_code,
+            'redirect_uri'  => $this->callback_url,
+            'client_id'     => $this->client_id,
+            'client_secret' => $this->client_secret,
+        ];
+
+        // Use wp_remote_post to make the HTTP POST request
+        $response = wp_remote_post( $url, [
+            'body'      => $params,
+            'timeout'   => 120,
+            'sslverify' => false,
+        ] );
+
+        // log access token response
+        // $this->put_program_logs( 'Linkedin Access Token Response: ' . json_encode( $response ) );
+        update_user_meta( $current_user_id, 'linkedin_access_token_response', json_encode( $response ) );
+
+        // Check for errors
+        if ( is_wp_error( $response ) ) {
+
+            // get error message
+            $error_message = $response->get_error_message();
+            // $this->put_program_logs( "Linkedin Access Token Request Error: $error_message" );
+
+            // update error to user meta
+            update_user_meta( $current_user_id, 'linkedin_access_token_error', $error_message );
+        } else {
+
+            // get status code
+            $status_code = wp_remote_retrieve_response_code( $response );
+            // get response body
+            $body = wp_remote_retrieve_body( $response );
+
+            // check status code
+            if ( $status_code == 200 ) {
+
+                // decode response body
+                $body = json_decode( $body );
+
+                // get access token
+                $access_token = $body->access_token;
+
+                // log access token
+                // $this->put_program_logs( 'Linkedin Access Token: ' . $access_token );
+
+                // update user meta
+                update_user_meta( $current_user_id, 'linkedin_access_token', $access_token );
+
+                // get user info
+                $this->get_linkedin_user_info( $access_token );
+
+                // update is_linkedin_logged_in to yes
+                update_user_meta( $current_user_id, 'is_linkedin_logged_in', 'yes' );
+
+            }
+
+        }
+    }
+
+    function get_linkedin_user_info( string $access_token ) {
+
+        // get current user id
+        $current_user_id = get_current_user_id();
+
+        // Get user info URL
+        $url = "https://api.linkedin.com/v2/userinfo";
+
+        // Make a GET request using wp_remote_get
+        $response = wp_remote_get( $url, [
+            'headers' => [
+                'Authorization' => 'Bearer ' . $access_token,
+            ],
+            'timeout' => 120,
+        ] );
+
+        // log user info response
+        // $this->put_program_logs( 'Linkedin User Info Response: ' . json_encode( $response ) );
+        update_user_meta( $current_user_id, 'linkedin_user_info_response', json_encode( $response ) );
+
+        // Check for errors
+        if ( is_wp_error( $response ) ) {
+            $user_info_error = $response->get_error_message();
+            // $this->put_program_logs( "Linkedin User Info Request Error: $user_info_error" );
+            // update error to user meta
+            update_user_meta( $current_user_id, 'linkedin_user_info_error', $user_info_error );
+            return;
+        }
+
+        // Retrieve the response body and decode JSON
+        $body = wp_remote_retrieve_body( $response );
+        // get sub
+        $urn = json_decode( $body )->sub;
+        // $this->put_program_logs( 'Linkedin URN: ' . $urn );
+
+        if ( !empty( $urn ) ) {
+            // update user meta
+            update_user_meta( $current_user_id, 'linkedin_urn', $urn );
+            return "url get success";
+        }
     }
 
     public function check_user_logged_in() {
 
         // get current user id
-        $user_id = get_current_user_id();
+        $current_user_id = get_current_user_id();
+
         // get is user linkedin logged in
-        $is_linkedin_logged_in = get_user_meta( $user_id, 'is_linkedin_logged_in', true );
+        $is_linkedin_logged_in = get_user_meta( $current_user_id, 'is_linkedin_logged_in', true );
 
         wp_send_json( [
             'is_logged_in' => $is_linkedin_logged_in,
@@ -113,9 +251,13 @@ class Share_In_Linkedin {
     }
 
     public function share_post_on_linkedin( string $predefined_url, string $post_title, string $post_content ) {
+
+        // get current user id
+        $current_user_id = get_current_user_id();
+
         $url          = get_option( 'api_url', 'https://api.linkedin.com/v2/ugcPosts' );
-        $access_token = get_option( 'api_key', '' );
-        $urn          = "JyqN44xm9_";
+        $access_token = get_user_meta( $current_user_id, 'linkedin_access_token', true );
+        $urn          = get_user_meta( $current_user_id, 'linkedin_urn', true );
 
         if ( empty( $access_token ) ) {
             return [
@@ -171,7 +313,7 @@ class Share_In_Linkedin {
         $body         = wp_remote_retrieve_body( $response );
         $decoded_body = json_decode( $body, true );
 
-        $this->put_program_logs( "LinkedIn Response: " . json_encode( $decoded_body ) );
+        // $this->put_program_logs( "LinkedIn Response: " . json_encode( $decoded_body ) );
 
         if ( $status_code === 201 && isset( $decoded_body['id'] ) ) {
             // Award points if successful
@@ -193,13 +335,13 @@ class Share_In_Linkedin {
         $base_url             = site_url() . '/wp-json';
         $url                  = "$base_url/wp/v2/gamipress/award-points";
         $gamipress_auth_token = get_option( 'auth_token' );
-        $user_id              = get_current_user_id();
+        $current_user_id      = get_current_user_id();
         $point                = 10;
 
-        $this->put_program_logs( 'current user id: ' . $user_id );
+        // $this->put_program_logs( 'current user id: ' . $current_user_id );
 
         $data = [
-            'user'        => $user_id,
+            'user'        => $current_user_id,
             'points'      => $point,
             'points_type' => 'coins',
             'reason'      => '10 monedas por Linkedin',
@@ -217,7 +359,7 @@ class Share_In_Linkedin {
         // Check for errors
         if ( is_wp_error( $response ) ) {
             $error_message = $response->get_error_message();
-            $this->put_program_logs( "Gamipress Request Error: $error_message" );
+            // $this->put_program_logs( "Gamipress Request Error: $error_message" );
             return [
                 'status'  => 'error',
                 'message' => $error_message,
@@ -228,8 +370,8 @@ class Share_In_Linkedin {
         $status_code = wp_remote_retrieve_response_code( $response );
         $body        = wp_remote_retrieve_body( $response );
 
-        $this->put_program_logs( "Gamipress Status Code: $status_code" );
-        $this->put_program_logs( "Gamipress Response: $body" );
+        // $this->put_program_logs( "Gamipress Status Code: $status_code" );
+        // $this->put_program_logs( "Gamipress Response: $body" );
 
         if ( '200' === $status_code ) {
             wp_send_json( [
@@ -238,16 +380,6 @@ class Share_In_Linkedin {
                 "body"    => $body,
             ] );
         }
-    }
-
-    public function sign_in_with_linkedin() {
-        // get current use id
-        $user_id = get_current_user_id();
-
-        // update user meta
-        update_user_meta( $user_id, 'test_token', '123456789' );
-
-        $this->put_program_logs( 'current user id: ' . $user_id );
     }
 
 }
