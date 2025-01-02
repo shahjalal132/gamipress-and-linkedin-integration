@@ -113,16 +113,47 @@
   position: fixed;
   top: 50%;
   left: 50%;
-  width: 10%;
+  width: 20%;
   transform: translate(-50%, -50%);
   border: 1px solid var(--linkedin-color);
   padding: 20px;
   border-radius: 10px;
   background-color: var(--white-color);
   z-index: 9999;
+  text-align: center;
+}
+
+#gli-sign-in-with-linkedin p {
+  margin-bottom: 0;
+}
+
+#gli-sign-in-with-linkedin-popup-close {
+  margin-left: 5px;
 }
 
 button#gli-sign-in-with-linkedin-popup-close {
   margin-top: 15px;
   background-color: var(--red-color);
+}
+
+@media only screen and (max-width: 945px) {
+  #gli-sign-in-with-linkedin {
+    width: 40%;
+  }
+}
+
+@media only screen and (max-width: 710px) {
+  #gli-sign-in-with-linkedin {
+    width: 50%;
+  }
+
+  #gli-sign-in-with-linkedin p {
+    margin-bottom: 10px;
+  }
+}
+
+@media only screen and (max-width: 810px) {
+  #gli-share-linkedin-popup{
+    width: 60%;
+  }
 }

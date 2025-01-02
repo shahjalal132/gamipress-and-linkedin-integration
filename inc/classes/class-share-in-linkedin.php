@@ -211,7 +211,7 @@ class Share_In_Linkedin {
 
                 <div id='gli-sign-in-with-linkedin' style='display:none;'>
                     <p>You need to sign in first to share on LinkedIn</p>
-                    <a id='gli-sign-in-with-linkedin-button' href='https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=$this->client_id&redirect_uri=$this->callback_url&scope=openid%20profile%20w_member_social' class='btn btn-linkedin'>Login with LinkedIn</a>
+                    <a id='gli-sign-in-with-linkedin-button' href='https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=$this->client_id&redirect_uri=$this->callback_url&scope=openid%20profile%20w_member_social' class='btn btn-linkedin' target='_blank'>Sign In with LinkedIn</a>
                     <button type='button' id='gli-sign-in-with-linkedin-popup-close' class='btn btn-linkedin'>Close</button>
                 </div>
 
