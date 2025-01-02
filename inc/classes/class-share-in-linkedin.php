@@ -30,6 +30,26 @@ class Share_In_Linkedin {
         // handle ajax request
         add_action( 'wp_ajax_share_on_linkedin', [ $this, 'share_on_linkedin' ] );
         add_action( 'wp_ajax_nopriv_share_on_linkedin', [ $this, 'share_on_linkedin' ] );
+
+        // handle ajax request
+        add_action( 'wp_ajax_check_user_logged_in', [ $this, 'check_user_logged_in' ] );
+        add_action( 'wp_ajax_nopriv_check_user_logged_in', [ $this, 'check_user_logged_in' ] );
+
+        // handle ajax request
+        add_action( 'wp_ajax_sign_in_with_linkedin', [ $this, 'sign_in_with_linkedin' ] );
+        add_action( 'wp_ajax_nopriv_sign_in_with_linkedin', [ $this, 'sign_in_with_linkedin' ] );
+    }
+
+    public function check_user_logged_in() {
+
+        // get current user id
+        $user_id = get_current_user_id();
+        // get is user linkedin logged in
+        $is_linkedin_logged_in = get_user_meta( $user_id, 'is_linkedin_logged_in', true );
+
+        wp_send_json( [
+            'is_logged_in' => $is_linkedin_logged_in,
+        ] );
     }
 
     public function add_social_share_buttons( $content ) {
@@ -52,7 +72,8 @@ class Share_In_Linkedin {
                 </div>
 
                 <div id='gli-sign-in-with-linkedin' style='display:none;'>
-                    <a href='https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=$this->client_id&redirect_uri=$this->callback_url&scope=openid%20profile%20w_member_social' class='btn btn-linkedin'>Login with LinkedIn</a>
+                    <p>You need to sign in first to share on LinkedIn</p>
+                    <a id='gli-sign-in-with-linkedin-button' href='https://www.linkedin.com/oauth/v2/authorization?response_type=code&client_id=$this->client_id&redirect_uri=$this->callback_url&scope=openid%20profile%20w_member_social' class='btn btn-linkedin'>Login with LinkedIn</a>
                     <button type='button' id='gli-sign-in-with-linkedin-popup-close' class='btn btn-linkedin'>Close</button>
                 </div>
 
@@ -217,6 +238,16 @@ class Share_In_Linkedin {
                 "body"    => $body,
             ] );
         }
+    }
+
+    public function sign_in_with_linkedin() {
+        // get current use id
+        $user_id = get_current_user_id();
+
+        // update user meta
+        update_user_meta( $user_id, 'test_token', '123456789' );
+
+        $this->put_program_logs( 'current user id: ' . $user_id );
     }
 
 }

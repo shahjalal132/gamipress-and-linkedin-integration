@@ -8,15 +8,25 @@
       let post_url = $(this).data("post-url");
       let post_title = $(this).data("post-title");
 
-      let is_logged_in = false;
+      $.ajax({
+        type: "POST",
+        url: wpb_public_localize.ajax_url,
+        data: {
+          action: "check_user_logged_in",
+          nonce: wpb_public_localize.nonce,
+        },
+        success: function (response) {
+          // console.log("check user logged in: ", response);
 
-      if (!is_logged_in) {
-        // open sign in popup
-        $("#gli-sign-in-with-linkedin").fadeIn();
-      } else {
-        // open share popup
-        $("#gli-share-linkedin-popup").fadeIn();
-      }
+          if (!response.is_logged_in) {
+            // open sign in popup
+            $("#gli-sign-in-with-linkedin").fadeIn();
+          } else {
+            // open share popup
+            $("#gli-share-linkedin-popup").fadeIn();
+          }
+        },
+      });
 
       // send ajax to backend when click on share button
       $("#gli-share-linkedin-popup-share").click(function (e) {
@@ -77,5 +87,19 @@
     });
 
     // Share on LinkedIn process end
+
+    $("#gli-sign-in-with-linkedin-button").click(function (e) {
+      e.preventDefault();
+      $.ajax({
+        type: "POST",
+        url: wpb_public_localize.ajax_url,
+        data: {
+          action: "sign_in_with_linkedin",
+        },
+        success: function (response) {
+          console.log(response);
+        },
+      });
+    });
   });
 })(jQuery);
