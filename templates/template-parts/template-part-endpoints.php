@@ -16,11 +16,11 @@ $base_url = site_url() . '/wp-json/api/v1';
             </tr>
         </thead>
         <tbody>
-            <tr>
+            <!-- <tr>
                 <td><?= $base_url ?>/users</td>
                 <td>Get all users</td>
                 <td><button class="copy-button">Copy</button></td>
-            </tr>
+            </tr> -->
         </tbody>
     </table>
 </div>
