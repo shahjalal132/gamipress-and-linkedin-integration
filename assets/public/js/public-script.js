@@ -1,7 +1,40 @@
 (function ($) {
   $(document).ready(function () {
-    // Share on LinkedIn process start
+    // show toast start
+    function showToast(config) {
+      const { type, timeout, title } = config;
 
+      const icon =
+        type === "success"
+          ? '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9 16.17l-3.88-3.88L4 13.41l5 5 10-10-1.41-1.42z"/></svg>'
+          : '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 3h-2v10h2zm0 14h-2v2h2z"/></svg>';
+
+      const toast = $(`
+              <div class="toast ${type}">
+                  <div class="header">
+                      <span class="icon">${icon}</span>
+                      <span>${title}</span>
+                      <span class="close-btn">&times;</span>
+                  </div>
+                  <div class="progress-bar" style="animation-duration: ${timeout}ms"></div>
+              </div>
+          `);
+
+      $("#toast-container").append(toast);
+
+      // Remove toast on close button click
+      toast.find(".close-btn").on("click", function () {
+        toast.remove();
+      });
+
+      // Auto-remove toast after timeout
+      setTimeout(() => {
+        toast.remove();
+      }, timeout);
+    }
+    // show toast end
+
+    // Share on LinkedIn process start
     $("#gli-share-linkedin").click(function (e) {
       e.preventDefault();
 
@@ -53,19 +86,24 @@
             $(spinner).removeClass("loader-spinner");
 
             if (response.success) {
-              console.log("Success:", response.data);
-              alert("Post shared successfully!");
+              showToast({
+                type: "success",
+                title: "Post shared successfully, You earned 10 points!",
+                timeout: 5000,
+              });
               $("#gli-share-linkedin-popup").fadeOut();
             } else {
-              console.error("Error:", response.data);
-              alert("Failed to share the post.");
+              showToast({
+                type: "error",
+                title: "Failed to share the post. Please try again.",
+                timeout: 5000,
+              });
               $("#gli-share-linkedin-popup").fadeOut();
             }
           },
           error: function (xhr, status, error) {
             $(spinner).removeClass("loader-spinner");
             console.error("Error:", xhr.responseText || error);
-            alert("An error occurred during the request.");
             $("#gli-share-linkedin-popup").fadeOut();
           },
         });
@@ -83,7 +121,6 @@
       e.preventDefault();
       $("#gli-sign-in-with-linkedin").fadeOut();
     });
-
     // Share on LinkedIn process end
   });
 })(jQuery);

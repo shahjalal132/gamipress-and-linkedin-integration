@@ -153,7 +153,7 @@ button#gli-sign-in-with-linkedin-popup-close {
 }
 
 @media only screen and (max-width: 810px) {
-  #gli-share-linkedin-popup{
+  #gli-share-linkedin-popup {
     width: 60%;
   }
 }

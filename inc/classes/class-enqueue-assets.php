@@ -54,10 +54,11 @@ class Enqueue_Assets {
      * @return void
      */
     public function enqueue_public_assets() {
-        
+
         // enqueue public css
         // wp_enqueue_style( "wpb-bootstrap", PLUGIN_PUBLIC_ASSETS_URL . "/css/bootstrap.min.css", [], time(), "all" );
         wp_enqueue_style( "wpb-public-css", PLUGIN_PUBLIC_ASSETS_URL . "/css/public-style.css", [], time(), "all" );
+        wp_enqueue_style( "wpb-toast", PLUGIN_PUBLIC_ASSETS_URL . "/css/toast.css", [], time(), "all" );
 
         // enqueue public js    
         // wp_enqueue_script( "wpb-bootstrap", PLUGIN_PUBLIC_ASSETS_URL . "/js/bootstrap.bundle.min.js", [], false, true );

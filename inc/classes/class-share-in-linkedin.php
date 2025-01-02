@@ -215,6 +215,8 @@ class Share_In_Linkedin {
                     <button type='button' id='gli-sign-in-with-linkedin-popup-close' class='btn btn-linkedin'>Close</button>
                 </div>
 
+                <div id='toast-container' ></div>
+
             </div>";
 
             // Append the buttons to the post content
