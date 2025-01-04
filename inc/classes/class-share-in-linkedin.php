@@ -267,16 +267,11 @@ class Share_In_Linkedin {
             ];
         }
 
-        // Extract the first image URL
-        $images = [];
-        preg_match_all( '/<img[^>]+src="([^">]+)"/i', $post_content, $matches );
-        if ( !empty( $matches[1] ) ) {
-            $images = $matches[1];
-        }
-        $first_image_url = !empty( $images ) ? $images[0] : $predefined_url;
-
         // Clean the post content (strip unsupported HTML)
         $clean_content = wp_strip_all_tags( $post_content );
+
+        // Clean the post title (strip unsupported HTML)
+        $clean_title = wp_strip_all_tags( $post_title );
 
         $post_data = [
             "author"          => "urn:li:person:$urn",
@@ -286,11 +281,11 @@ class Share_In_Linkedin {
                     "shareCommentary"    => [
                         "text" => $clean_content,
                     ],
-                    "shareMediaCategory" => !empty( $images ) ? "IMAGE" : "ARTICLE",
+                    "shareMediaCategory" => "ARTICLE",
                     "media"              => [
                         [
                             "status"      => "READY",
-                            "originalUrl" => $first_image_url,
+                            "originalUrl" => $predefined_url,
                             "title"       => [
                                 "text" => $post_title,
                             ],
