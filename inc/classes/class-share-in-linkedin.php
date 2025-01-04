@@ -270,8 +270,14 @@ class Share_In_Linkedin {
         // Clean the post content (strip unsupported HTML)
         $clean_content = wp_strip_all_tags( $post_content );
 
+        // Save the clean content in an option
+        update_option( 'clean_post_content', $clean_content );
+
         // Clean the post title (strip unsupported HTML)
         $clean_title = wp_strip_all_tags( $post_title );
+
+        // Save the clean title in an option
+        update_option( 'clean_post_title', $clean_title );
 
         $post_data = [
             "author"          => "urn:li:person:$urn",
@@ -287,7 +293,7 @@ class Share_In_Linkedin {
                             "status"      => "READY",
                             "originalUrl" => $predefined_url,
                             "title"       => [
-                                "text" => $post_title,
+                                "text" => $clean_title,
                             ],
                         ],
                     ],

@@ -44,7 +44,7 @@
       let postPreviewPrompt = $("#gli-share-linkedin-popup-input");
 
       // generate post content
-      let rawPostContent = `${post_title}\n\n${post_content}`;
+      let rawPostContent = `${post_title}\n\n, ${post_content}`;
 
       $.ajax({
         type: "POST",
