@@ -40,6 +40,11 @@
 
       let post_url = $(this).data("post-url");
       let post_title = $(this).data("post-title");
+      let post_content = $(this).data("post-content");
+      let postPreviewPrompt = $("#gli-share-linkedin-popup-input");
+
+      // generate post content
+      let rawPostContent = `${post_title}\n\n${post_content}`;
 
       $.ajax({
         type: "POST",
@@ -55,6 +60,8 @@
           } else if (response.is_logged_in === "yes") {
             // open share popup
             $("#gli-share-linkedin-popup").fadeIn();
+            // set post content
+            postPreviewPrompt.val(rawPostContent);
           }
         },
       });
@@ -64,7 +71,7 @@
         e.preventDefault();
 
         // get input value
-        let input_prompt_value = $("#gli-share-linkedin-popup-input").val();
+        let input_prompt_value = postPreviewPrompt.val();
         const spinner = $(".spinner-loader-wrapper");
 
         // add loading spinner

@@ -196,7 +196,7 @@ class Share_In_Linkedin {
             $social_buttons = "
             <div class='gli-social-share-buttons'>
 
-                <a href='JavaScript:void(0)' id='gli-share-linkedin' data-post-url='" . get_permalink() . "' data-post-title='" . get_the_title() . "' class='btn btn-linkedin'>LinkedIn</a>
+                <a href='JavaScript:void(0)' id='gli-share-linkedin' data-post-url='" . get_permalink() . "' data-post-title='" . get_the_title() . "' data-post-content='" . get_the_content() . "' class='btn btn-linkedin'>LinkedIn</a>
 
                 <div id='gli-share-linkedin-popup' style='display:none;'>
                     <p>What do you want to talk about?</p>
@@ -251,7 +251,6 @@ class Share_In_Linkedin {
             wp_send_json_error( $response['message'] );
         }
     }
-
     public function share_post_on_linkedin( string $predefined_url, string $post_title, string $post_content ) {
 
         // get current user id
@@ -268,19 +267,30 @@ class Share_In_Linkedin {
             ];
         }
 
+        // Extract the first image URL
+        $images = [];
+        preg_match_all( '/<img[^>]+src="([^">]+)"/i', $post_content, $matches );
+        if ( !empty( $matches[1] ) ) {
+            $images = $matches[1];
+        }
+        $first_image_url = !empty( $images ) ? $images[0] : $predefined_url;
+
+        // Clean the post content (strip unsupported HTML)
+        $clean_content = wp_strip_all_tags( $post_content );
+
         $post_data = [
             "author"          => "urn:li:person:$urn",
             "lifecycleState"  => "PUBLISHED",
             "specificContent" => [
                 "com.linkedin.ugc.ShareContent" => [
                     "shareCommentary"    => [
-                        "text" => $post_content,
+                        "text" => $clean_content,
                     ],
-                    "shareMediaCategory" => "ARTICLE",
+                    "shareMediaCategory" => !empty( $images ) ? "IMAGE" : "ARTICLE",
                     "media"              => [
                         [
                             "status"      => "READY",
-                            "originalUrl" => $predefined_url,
+                            "originalUrl" => $first_image_url,
                             "title"       => [
                                 "text" => $post_title,
                             ],
@@ -324,6 +334,9 @@ class Share_In_Linkedin {
                 'status'  => 'success',
                 'message' => 'Post shared successfully!',
             ];
+        } else if ( $status_code === 401 ) {
+            // update user meta linkedin login no
+            update_user_meta( $current_user_id, 'is_linkedin_logged_in', 'no' );
         }
 
         return [
