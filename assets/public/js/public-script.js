@@ -48,11 +48,23 @@
 
       let post_url = $(this).data("post-url");
       let post_title = $(this).data("post-title");
-      let post_content = $(this).data("post-content");
-      let postPreviewPrompt = $("#gli-share-linkedin-popup-input");
 
-      // generate post content
-      let rawPostContent = `${post_title}\n\n, ${post_content}`;
+      let post_content = $(this).data("post-content");
+      // remove html comments
+      post_content = post_content.replace(/<!--(.|\n)*?-->/g, "");
+
+      // Regex to capture the value of data-trx-lazyload-src
+      const regex = /data-trx-lazyload-src="([^"]+)"/g;
+      // Use the regex to extract the value
+      const matches = post_content.match(regex);
+      // get image url
+      let imageUrl = "";
+      if (matches && matches.length > 0) {
+        imageUrl = matches[0].replace('data-trx-lazyload-src="', "");
+      }
+
+      // get post preview prompt
+      let postPreviewPrompt = $("#gli-share-linkedin-popup-input");
 
       // set post url to cookie for 1 hours
       setCookie("gli_current_post_url", post_url, 1);
@@ -72,7 +84,7 @@
             // open share popup
             $("#gli-share-linkedin-popup").fadeIn();
             // set post content
-            postPreviewPrompt.val(rawPostContent);
+            postPreviewPrompt.val(post_content);
           }
         },
       });
@@ -98,6 +110,7 @@
             predefined_url: post_url,
             post_title: post_title,
             input_prompt_value: input_prompt_value,
+            image_url: imageUrl,
           },
           success: function (response) {
             // remove loading spinner

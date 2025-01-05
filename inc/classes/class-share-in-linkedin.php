@@ -246,6 +246,7 @@ class Share_In_Linkedin {
         $predefined_url = sanitize_text_field( $_POST['predefined_url'] );
         $post_title     = sanitize_text_field( $_POST['post_title'] );
         $prompt_value   = sanitize_text_field( $_POST['input_prompt_value'] );
+        $image_url      = sanitize_text_field( $_POST['image_url'] );
 
         // check if data is empty
         if ( empty( $predefined_url ) || empty( $post_title ) || empty( $prompt_value ) ) {
@@ -253,7 +254,7 @@ class Share_In_Linkedin {
         }
 
         // Call the share function
-        $response = $this->share_post_on_linkedin( $predefined_url, $post_title, $prompt_value );
+        $response = $this->share_post_on_linkedin( $predefined_url, $post_title, $prompt_value, $image_url );
 
         // Send JSON response based on result
         if ( $response['status'] === 'success' ) {
@@ -262,7 +263,7 @@ class Share_In_Linkedin {
             wp_send_json_error( $response['message'] );
         }
     }
-    public function share_post_on_linkedin( string $predefined_url, string $post_title, string $post_content ) {
+    public function share_post_on_linkedin( string $predefined_url, string $post_title, string $post_content, string $image_url ) {
 
         // get current user id
         $current_user_id = get_current_user_id();
@@ -278,19 +279,26 @@ class Share_In_Linkedin {
             ];
         }
 
+        $this->put_program_logs( 'Reached Here before upload image to linkedin' );
+
+        // upload image to linkedin and get asset id
+        $asset_id = $this->upload_image_to_linkedin_get_asset_id( $access_token, $image_url, $urn );
+        $this->put_program_logs( 'asset id: ' . $asset_id );
+
         // Clean the post content (strip unsupported HTML)
         $clean_content = wp_strip_all_tags( $post_content );
 
         // Save the clean content in an option
-        update_option( 'clean_post_content', $clean_content );
+        // update_option( 'clean_post_content', $clean_content );
 
         // Clean the post title (strip unsupported HTML)
         $clean_title = wp_strip_all_tags( $post_title );
 
         // Save the clean title in an option
-        update_option( 'clean_post_title', $clean_title );
+        // update_option( 'clean_post_title', $clean_title );
 
-        $post_data = [
+        // Prepare the post data without image
+        /* $post_data = [
             "author"          => "urn:li:person:$urn",
             "lifecycleState"  => "PUBLISHED",
             "specificContent" => [
@@ -313,16 +321,58 @@ class Share_In_Linkedin {
             "visibility"      => [
                 "com.linkedin.ugc.MemberNetworkVisibility" => "PUBLIC",
             ],
+        ]; */
+
+        // Prepare the post data with image
+        $post_data = [
+            "author"          => "urn:li:person:$urn",
+            "lifecycleState"  => "PUBLISHED",
+            "specificContent" => [
+                "com.linkedin.ugc.ShareContent" => [
+                    "shareCommentary"    => [
+                        "text" => $clean_content,
+                    ],
+                    "shareMediaCategory" => "IMAGE",
+                    "media"              => [
+                        [
+                            "status"      => "READY",
+                            "description" => [
+                                "text" => "$post_title",
+                            ],
+                            "media"       => $asset_id,
+                            "title"       => [
+                                "text" => "$post_title",
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+            "visibility"      => [
+                "com.linkedin.ugc.MemberNetworkVisibility" => "PUBLIC",
+            ],
+        ];
+
+        // prepare headers for without image post
+        /* $headers = [
+            'Authorization' => 'Bearer ' . $access_token,
+            'Content-Type'  => 'application/json',
+        ]; */
+
+        // prepare headers for with image post
+        $headers = [
+            'Authorization' => 'Bearer ' . $access_token,
+            'Content-Type'  => 'application/json',
+            "X-Restli-Protocol-Version: 2.0.0",
         ];
 
         $response = wp_remote_post( $url, [
-            'headers' => [
-                'Authorization' => 'Bearer ' . $access_token,
-                'Content-Type'  => 'application/json',
-            ],
+            'headers' => $headers,
             'body'    => wp_json_encode( $post_data ),
             'timeout' => 120,
         ] );
+
+        // log response
+        // $this->put_program_logs( "LinkedIn Response: " . json_encode( $response ) );
 
         if ( is_wp_error( $response ) ) {
             $error_message = $response->get_error_message();
@@ -336,8 +386,6 @@ class Share_In_Linkedin {
         $status_code  = wp_remote_retrieve_response_code( $response );
         $body         = wp_remote_retrieve_body( $response );
         $decoded_body = json_decode( $body, true );
-
-        // $this->put_program_logs( "LinkedIn Response: " . json_encode( $decoded_body ) );
 
         if ( $status_code === 201 && isset( $decoded_body['id'] ) ) {
             // Award points if successful
@@ -355,6 +403,87 @@ class Share_In_Linkedin {
             'status'  => 'error',
             'message' => 'Failed to share the post on LinkedIn.',
         ];
+    }
+
+    public function upload_image_to_linkedin_get_asset_id( string $access_token, string $image_url, string $urn ) {
+
+        // LinkedIn API URL for registering image upload
+        $register_upload_url = "https://api.linkedin.com/v2/assets?action=registerUpload";
+
+        // Step 1: Register the image upload
+        $headers = [
+            "Authorization"             => "Bearer $access_token",
+            "Content-Type"              => "application/json",
+            "X-Restli-Protocol-Version" => "2.0.0",
+        ];
+
+        $body = [
+            "registerUploadRequest" => [
+                "recipes"              => [ "urn:li:digitalmediaRecipe:feedshare-image" ],
+                "owner"                => "urn:li:person:$urn",
+                "serviceRelationships" => [
+                    [
+                        "relationshipType" => "OWNER",
+                        "identifier"       => "urn:li:userGeneratedContent",
+                    ],
+                ],
+            ],
+        ];
+
+        // Send POST request to register the image upload
+        $response = wp_remote_post( $register_upload_url, [
+            "headers" => $headers,
+            "body"    => json_encode( $body ),
+        ] );
+
+        // Log the response
+        // $this->put_program_logs( "LinkedIn Upload Image Response: " . $response );
+
+        if ( is_wp_error( $response ) ) {
+            // $this->put_program_logs( "LinkedIn Upload Image Request Error: " . $response->get_error_message() );
+            return new WP_Error( "linkedin_register_error", "Error registering image upload: " . $response->get_error_message() );
+        }
+
+        $response_body = json_decode( wp_remote_retrieve_body( $response ), true );
+        if ( !isset( $response_body['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl'] ) ) {
+            // $this->put_program_logs( "LinkedIn Upload Image Response: " . json_encode( $response_body ) );
+            return new WP_Error( "linkedin_upload_url_error", "Failed to retrieve the upload URL." );
+        }
+
+        $upload_url = $response_body['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl'];
+        $asset_id   = $response_body['value']['asset'];
+
+        // static image url 
+        $_image_url = "https://test.courselms.com/wp-content/uploads/2022/01/asdadasda-836x1024.jpg";
+
+        // Step 2: Upload the image
+        $image_data = file_get_contents( $_image_url );
+        if ( !$image_data ) {
+            // $this->put_program_logs( "Unable to read the image file." );
+            return new WP_Error( "image_read_error", "Unable to read the image file." );
+        }
+
+        $upload_response = wp_remote_post( $upload_url, [
+            "headers" => [
+                "Authorization" => "Bearer $access_token",
+                "Content-Type"  => "image/jpeg",
+            ],
+            "body"    => $image_data,
+        ] );
+
+        if ( is_wp_error( $upload_response ) ) {
+            // $this->put_program_logs( "LinkedIn Upload Image Request Error: " . $upload_response->get_error_message() );
+            return new WP_Error( "linkedin_image_upload_error", "Error uploading the image: " . $upload_response->get_error_message() );
+        }
+
+        $upload_response_code = wp_remote_retrieve_response_code( $upload_response );
+        if ( $upload_response_code !== 201 ) { // LinkedIn expects a 201 response for a successful upload
+            // $this->put_program_logs( "LinkedIn Upload Image Response: " . json_encode( $upload_response ) );
+            return new WP_Error( "linkedin_image_upload_failed", "Image upload failed. Response code: " . $upload_response_code );
+        }
+
+        // Return the asset ID for the uploaded image
+        return $asset_id;
     }
 
     public function award_point_to_user() {
