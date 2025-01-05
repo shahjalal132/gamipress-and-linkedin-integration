@@ -65,7 +65,7 @@ class Share_In_Linkedin {
                 $cookie_key = 'gli_current_post_url';
                 if ( isset( $_COOKIE[$cookie_key] ) ) {
                     $current_post_url = sanitize_text_field( $_COOKIE[$cookie_key] );
-                    $this->put_program_logs( 'Current Post URL: ' . $current_post_url );
+                    // $this->put_program_logs( 'Current Post URL: ' . $current_post_url );
                     if ( !empty( $current_post_url ) ) {
                         // redirect to current post url
                         wp_redirect( $current_post_url );
@@ -279,11 +279,9 @@ class Share_In_Linkedin {
             ];
         }
 
-        $this->put_program_logs( 'Reached Here before upload image to linkedin' );
-
         // upload image to linkedin and get asset id
         $asset_id = $this->upload_image_to_linkedin_get_asset_id( $access_token, $image_url, $urn );
-        $this->put_program_logs( 'asset id: ' . $asset_id );
+        // $this->put_program_logs( 'asset id: ' . $asset_id );
 
         // Clean the post content (strip unsupported HTML)
         $clean_content = wp_strip_all_tags( $post_content );
@@ -376,7 +374,7 @@ class Share_In_Linkedin {
 
         if ( is_wp_error( $response ) ) {
             $error_message = $response->get_error_message();
-            $this->put_program_logs( "LinkedIn Request Error: $error_message" );
+            // $this->put_program_logs( "LinkedIn Request Error: $error_message" );
             return [
                 'status'  => 'error',
                 'message' => $error_message,
@@ -441,13 +439,13 @@ class Share_In_Linkedin {
 
         if ( is_wp_error( $response ) ) {
             // $this->put_program_logs( "LinkedIn Upload Image Request Error: " . $response->get_error_message() );
-            return new WP_Error( "linkedin_register_error", "Error registering image upload: " . $response->get_error_message() );
+            wp_send_json_error( "Error registering image upload: " . $response->get_error_message() );
         }
 
         $response_body = json_decode( wp_remote_retrieve_body( $response ), true );
         if ( !isset( $response_body['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl'] ) ) {
             // $this->put_program_logs( "LinkedIn Upload Image Response: " . json_encode( $response_body ) );
-            return new WP_Error( "linkedin_upload_url_error", "Failed to retrieve the upload URL." );
+            wp_send_json_error( "Failed to retrieve the upload URL." );
         }
 
         $upload_url = $response_body['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl'];
@@ -456,12 +454,14 @@ class Share_In_Linkedin {
         // static image url 
         $_image_url = "https://test.courselms.com/wp-content/uploads/2022/01/asdadasda-836x1024.jpg";
 
+        // $this->put_program_logs( "Upload Image URL: $image_url" );
+
         // Step 2: Upload the image
         // $image_data = file_get_contents( $_image_url );
         $image_data = file_get_contents( $image_url );
         if ( !$image_data ) {
             // $this->put_program_logs( "Unable to read the image file." );
-            return new WP_Error( "image_read_error", "Unable to read the image file." );
+            wp_send_json_error( "Unable to read the image file." );
         }
 
         $upload_response = wp_remote_post( $upload_url, [
@@ -472,15 +472,13 @@ class Share_In_Linkedin {
             "body"    => $image_data,
         ] );
 
-        if ( is_wp_error( $upload_response ) ) {
-            // $this->put_program_logs( "LinkedIn Upload Image Request Error: " . $upload_response->get_error_message() );
-            return new WP_Error( "linkedin_image_upload_error", "Error uploading the image: " . $upload_response->get_error_message() );
-        }
-
         $upload_response_code = wp_remote_retrieve_response_code( $upload_response );
-        if ( $upload_response_code !== 201 ) { // LinkedIn expects a 201 response for a successful upload
+        if ( $upload_response_code !== 201 ) {
             // $this->put_program_logs( "LinkedIn Upload Image Response: " . json_encode( $upload_response ) );
-            return new WP_Error( "linkedin_image_upload_failed", "Image upload failed. Response code: " . $upload_response_code );
+            wp_send_json_error( "Image upload failed. Response code: " . $upload_response_code );
+        } else if ( $upload_response_code === 401 ) {
+            update_user_meta( get_current_user_id(), 'is_linkedin_logged_in', 'no' );
+            wp_send_json_error( "LinkedIn Login Failed. Please try again." );
         }
 
         // Return the asset ID for the uploaded image
