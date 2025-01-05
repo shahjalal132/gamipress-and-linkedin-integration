@@ -457,7 +457,8 @@ class Share_In_Linkedin {
         $_image_url = "https://test.courselms.com/wp-content/uploads/2022/01/asdadasda-836x1024.jpg";
 
         // Step 2: Upload the image
-        $image_data = file_get_contents( $_image_url );
+        // $image_data = file_get_contents( $_image_url );
+        $image_data = file_get_contents( $image_url );
         if ( !$image_data ) {
             // $this->put_program_logs( "Unable to read the image file." );
             return new WP_Error( "image_read_error", "Unable to read the image file." );
