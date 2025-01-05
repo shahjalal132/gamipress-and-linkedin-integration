@@ -60,6 +60,18 @@ class Share_In_Linkedin {
 
                 // Get access token for this user
                 $this->get_linkedin_access_token( $auth_code );
+
+                // get current post url from cookie
+                $cookie_key = 'gli_current_post_url';
+                if ( isset( $_COOKIE[$cookie_key] ) ) {
+                    $current_post_url = sanitize_text_field( $_COOKIE[$cookie_key] );
+                    $this->put_program_logs( 'Current Post URL: ' . $current_post_url );
+                    if ( !empty( $current_post_url ) ) {
+                        // redirect to current post url
+                        wp_redirect( $current_post_url );
+                        exit();
+                    }
+                }
             }
         } else {
             // $this->put_program_logs( 'No auth code found' );
@@ -226,7 +238,6 @@ class Share_In_Linkedin {
         // Return the original content if not a single post
         return $content;
     }
-
     public function share_on_linkedin() {
         // check nonce
         check_ajax_referer( 'wpb_public_nonce', 'nonce' );

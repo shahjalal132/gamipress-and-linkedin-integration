@@ -34,6 +34,14 @@
     }
     // show toast end
 
+    function setCookie(name, value, hours) {
+      const date = new Date();
+      date.setTime(date.getTime() + hours * 60 * 60 * 1000); // Convert hours to milliseconds
+      const expires = "expires=" + date.toUTCString();
+      document.cookie =
+        name + "=" + encodeURIComponent(value) + ";" + expires + ";path=/";
+    }
+
     // Share on LinkedIn process start
     $("#gli-share-linkedin").click(function (e) {
       e.preventDefault();
@@ -45,6 +53,9 @@
 
       // generate post content
       let rawPostContent = `${post_title}\n\n, ${post_content}`;
+
+      // set post url to cookie for 1 hours
+      setCookie("gli_current_post_url", post_url, 1);
 
       $.ajax({
         type: "POST",
