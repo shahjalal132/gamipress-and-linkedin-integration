@@ -292,6 +292,9 @@ class Share_In_Linkedin {
         // Clean the post title (strip unsupported HTML)
         $clean_title = wp_strip_all_tags( $post_title );
 
+        // transform post content
+        $transform_post_content = "Title: " . $clean_title . "\n\n" . $clean_content;
+
         // Save the clean title in an option
         // update_option( 'clean_post_title', $clean_title );
 
@@ -302,7 +305,7 @@ class Share_In_Linkedin {
             "specificContent" => [
                 "com.linkedin.ugc.ShareContent" => [
                     "shareCommentary"    => [
-                        "text" => $clean_content,
+                        "text" => $$transform_post_content,
                     ],
                     "shareMediaCategory" => "ARTICLE",
                     "media"              => [
@@ -328,7 +331,7 @@ class Share_In_Linkedin {
             "specificContent" => [
                 "com.linkedin.ugc.ShareContent" => [
                     "shareCommentary"    => [
-                        "text" => $clean_content,
+                        "text" => $transform_post_content,
                     ],
                     "shareMediaCategory" => "IMAGE",
                     "media"              => [
@@ -490,7 +493,6 @@ class Share_In_Linkedin {
         // Return the asset ID for the uploaded image
         return $asset_id;
     }
-
     public function award_point_to_user() {
 
         $base_url             = site_url() . '/wp-json';
