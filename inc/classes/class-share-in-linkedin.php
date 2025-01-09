@@ -405,6 +405,9 @@ class Share_In_Linkedin {
 
     public function upload_image_to_linkedin_get_asset_id( string $access_token, string $image_url, string $urn ) {
 
+        // get current user id
+        $current_user_id = get_current_user_id();
+
         // LinkedIn API URL for registering image upload
         $register_upload_url = "https://api.linkedin.com/v2/assets?action=registerUpload";
 
@@ -445,6 +448,8 @@ class Share_In_Linkedin {
         $response_body = json_decode( wp_remote_retrieve_body( $response ), true );
         if ( !isset( $response_body['value']['uploadMechanism']['com.linkedin.digitalmedia.uploading.MediaUploadHttpRequest']['uploadUrl'] ) ) {
             // $this->put_program_logs( "LinkedIn Upload Image Response: " . json_encode( $response_body ) );
+            update_user_meta( $current_user_id, 'error_asset_id', json_encode( $response_body ) );
+            update_user_meta( $current_user_id, 'is_linkedin_logged_in', 'no' );
             wp_send_json_error( "Failed to retrieve the upload URL." );
         }
 
@@ -475,9 +480,10 @@ class Share_In_Linkedin {
         $upload_response_code = wp_remote_retrieve_response_code( $upload_response );
         if ( $upload_response_code !== 201 ) {
             // $this->put_program_logs( "LinkedIn Upload Image Response: " . json_encode( $upload_response ) );
+            update_user_meta( $current_user_id, 'is_linkedin_logged_in', 'no' );
             wp_send_json_error( "Image upload failed. Response code: " . $upload_response_code );
         } else if ( $upload_response_code === 401 ) {
-            update_user_meta( get_current_user_id(), 'is_linkedin_logged_in', 'no' );
+            update_user_meta( $current_user_id, 'is_linkedin_logged_in', 'no' );
             wp_send_json_error( "LinkedIn Login Failed. Please try again." );
         }
 

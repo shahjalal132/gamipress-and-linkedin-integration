@@ -113,6 +113,7 @@
             image_url: imageUrl,
           },
           success: function (response) {
+            console.log(response);
             // remove loading spinner
             $(spinner).removeClass("loader-spinner");
 
@@ -127,6 +128,7 @@
               showToast({
                 type: "error",
                 title: "Failed to share the post. Please try again.",
+                // title: response.data,
                 timeout: 5000,
               });
               $("#gli-share-linkedin-popup").fadeOut();
