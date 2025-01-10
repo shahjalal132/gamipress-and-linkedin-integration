@@ -293,7 +293,7 @@ class Share_In_Linkedin {
         $clean_title = wp_strip_all_tags( $post_title );
 
         // transform post content
-        $transform_post_content = "Title: " . $clean_title . "\n\n" . $clean_content;
+        $transform_post_content = $clean_title . "\n\n" . $clean_content;
 
         // Save the clean title in an option
         // update_option( 'clean_post_title', $clean_title );
