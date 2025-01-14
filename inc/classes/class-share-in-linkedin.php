@@ -38,8 +38,6 @@ class Share_In_Linkedin {
         // get ?code for login with linkedin
         add_action( 'wp_loaded', [ $this, 'get_linkedin_auth_code' ] );
 
-        // TODO: update is_linkedin_logged_in to no after 60 days
-
     }
 
     public function get_linkedin_auth_code() {
@@ -212,7 +210,7 @@ class Share_In_Linkedin {
 
                 <div id='gli-share-linkedin-popup' style='display:none;'>
                     <p>What do you want to talk about?</p>
-                    <input type='text' id='gli-share-linkedin-popup-input' placeholder='What do you want to talk about?'>
+                    <input type='hidden' id='gli-share-linkedin-popup-input' placeholder='What do you want to talk about?'>
 
                     <button type='button' id='gli-share-linkedin-popup-close' class='btn btn-linkedin'>Close</button>
                     <button type='button' id='gli-share-linkedin-popup-share' class='btn btn-linkedin'>
