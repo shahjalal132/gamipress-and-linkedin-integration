@@ -195,8 +195,14 @@ class Share_In_Linkedin {
         // get is user linkedin logged in
         $is_linkedin_logged_in = get_user_meta( $current_user_id, 'is_linkedin_logged_in', true );
 
+        // get post content
+        $post_content = sanitize_text_field( $_POST['post_content'] );
+        // clean post contents
+        $post_content = wp_strip_all_tags( $post_content );
+
         wp_send_json( [
             'is_logged_in' => $is_linkedin_logged_in,
+            'post_content' => $post_content
         ] );
     }
 
@@ -210,7 +216,7 @@ class Share_In_Linkedin {
 
                 <div id='gli-share-linkedin-popup' style='display:none;'>
                     <p>What do you want to talk about?</p>
-                    <input type='hidden' id='gli-share-linkedin-popup-input' placeholder='What do you want to talk about?'>
+                    <input type='text' id='gli-share-linkedin-popup-input' placeholder='What do you want to talk about?'>
 
                     <button type='button' id='gli-share-linkedin-popup-close' class='btn btn-linkedin'>Close</button>
                     <button type='button' id='gli-share-linkedin-popup-share' class='btn btn-linkedin'>
@@ -491,6 +497,7 @@ class Share_In_Linkedin {
         // Return the asset ID for the uploaded image
         return $asset_id;
     }
+
     public function award_point_to_user() {
 
         $base_url             = site_url() . '/wp-json';

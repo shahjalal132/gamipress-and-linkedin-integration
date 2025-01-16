@@ -75,6 +75,7 @@
         data: {
           action: "check_user_logged_in",
           nonce: wpb_public_localize.nonce,
+          post_content: post_content,
         },
         success: function (response) {
           if (response.is_logged_in === "no" || response.is_logged_in === "") {
@@ -84,7 +85,7 @@
             // open share popup
             $("#gli-share-linkedin-popup").fadeIn();
             // set post content
-            postPreviewPrompt.val(post_content);
+            postPreviewPrompt.val(response.post_content);
           }
         },
       });
